@@ -180,11 +180,11 @@
 
         <div class="row">
           <div>
-            <label>Expected Result</label>
+            <label>Expected Result (What SHOULD happen)</label>
             <textarea id="expected" placeholder="Subtitle should display fully and remain on screen until line finishes."></textarea>
           </div>
           <div>
-            <label>Actual Result</label>
+        <label>Actual Result (What ACTUALLY happened)</label>
             <textarea id="actual" placeholder="Subtitle disappears early before character finishes speaking."></textarea>
           </div>
         </div>
@@ -321,6 +321,7 @@
     }
 
     // ---------- Steps ----------
+    
     const steps = [];
     function renderSteps(){
       const list = $('stepsList');
@@ -329,9 +330,14 @@
         const row = document.createElement('div');
         row.className = 'stepItem';
 
+        const label = document.createElement('span');
+        label.textContent = `Step ${idx + 1}:`;
+        label.style.minWidth = "70px";
+        label.style.alignSelf = "center";
+
         const input = document.createElement('input');
         input.value = s;
-        input.placeholder = `Step ${idx+1}`;
+        input.placeholder = "Describe action...";
         input.addEventListener('input', (e)=> steps[idx] = e.target.value);
 
         const btnWrap = document.createElement('div');
@@ -367,7 +373,7 @@
         };
 
         btnWrap.append(up, down, del);
-        row.append(input, btnWrap);
+        row.append(label, input, btnWrap);
         list.append(row);
       });
     }
