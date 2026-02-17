@@ -602,5 +602,35 @@
       }
     })();
   </script>
+
+    <!-- 🔥 Firebase Module Script -->
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+        getFirestore,
+        collection,
+        addDoc,
+        getDocs,
+        serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCPJe3CIlSDErMjJ9L25o6nqfaBQBYWAQk",
+        authDomain: "qabugreporter-40363.firebaseapp.com",
+        projectId: "qabugreporter-40363",
+        storageBucket: "qabugreporter-40363.firebasestorage.app",
+        messagingSenderId: "380691268735",
+        appId: "1:380691268735:web:351d78b47bb494f317eb4a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.collection = collection;
+    window.addDoc = addDoc;
+    window.getDocs = getDocs;
+    window.serverTimestamp = serverTimestamp;
+    </script>
 </body>
 </html>
