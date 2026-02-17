@@ -442,7 +442,11 @@
       toast('Loaded');
     }
 
-    $('saveBtn').addEventListener('click', saveLocal);
+    $('saveBtn').addEventListener('click', async () => {
+    saveLocal();              // still save locally
+    await saveBugToFirebase(); // also save to Firebase
+    });
+
     $('loadBtn').addEventListener('click', loadLocal);
 
     $('clearBtn').addEventListener('click', ()=>{
@@ -456,6 +460,26 @@
       });
       toast('Form cleared');
     });
+
+    async function saveBugToFirebase() {
+  try {
+    const bugData = collectForm();
+
+    await window.addDoc(
+      window.collection(window.db, "projects/intergalactic/bugs"),
+      {
+        ...bugData,
+        createdAt: window.serverTimestamp()
+      }
+    );
+
+    toast("Saved to Firebase!");
+  } catch (error) {
+    console.error("Firebase error:", error);
+    toast("Firebase error - check console");
+  }
+}
+
 
     // ---------- Export ----------
     function toMarkdown(d){
