@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QA Bug Reporter (Offline)</title>
+  <style>
+    :root { --bg:#0b1220; --card:#121a2b; --muted:#94a3b8; --text:#e5e7eb; --line:#24324f; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 20% 0%, #16213a 0%, var(--bg) 55%);
+      color: var(--text);
+    }
+    header {
+      padding: 18px 18px 8px;
+      border-bottom: 1px solid var(--line);
+      display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    }
+    header h1 { font-size: 16px; margin: 0; letter-spacing:.2px; }
+    header .hint { color: var(--muted); font-size: 12px; }
+    main { padding: 18px; max-width: 1100px; margin: 0 auto; }
+    .grid { display: grid; gap: 14px; grid-template-columns: 1.15fr .85fr; }
+    @media (max-width: 980px){ .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: color-mix(in oklab, var(--card) 92%, black 8%);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .card h2 { font-size: 14px; margin: 0 0 10px; }
+    label { display:block; font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
+    input, select, textarea, button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #0b1427;
+      color: var(--text);
+      padding: 10px 10px;
+      outline: none;
+      font-size: 13px;
+    }
+    textarea { min-height: 92px; resize: vertical; line-height: 1.35; }
+    input:focus, select:focus, textarea:focus { border-color: #4f6cff; box-shadow: 0 0 0 3px rgba(79,108,255,.15); }
+    .row { display:flex; gap:10px; }
+    .row > * { flex:1; }
+    .btnRow { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button {
+      cursor: pointer;
+      background: #13203b;
+      transition: transform .02s ease, background .15s ease;
+    }
+    button:hover { background: #182a4e; }
+    button:active { transform: translateY(1px); }
+    .btnSmall { padding: 8px 10px; font-size: 12px; }
+    .btnPrimary { background: #2742ff; border-color: #2742ff; }
+    .btnPrimary:hover { background: #3350ff; }
+    .btnDanger { background: #3b1620; border-color: #5c1e2f; }
+    .btnDanger:hover { background: #4a1b28; }
+    .pill {
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--line);
+      background:#0b1427;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .stepsList { display:flex; flex-direction:column; gap:8px; margin-top: 8px; }
+    .stepItem { display:flex; gap:8px; align-items:flex-start; }
+    .stepItem input { flex:1; }
+    .stepBtns { width:auto; display:flex; gap:8px; }
+    .stepBtns button { width:auto; }
+
+    .output {
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #070f1f;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      min-height: 120px;
+      color: #dbeafe;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .toast {
+      position: fixed;
+      bottom: 16px; left: 50%;
+      transform: translateX(-50%);
+      background: #0b1427;
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    .toast.show { opacity: 1; }
+    kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background:#0b1427; border:1px solid var(--line);
+      border-bottom-width: 2px;
+      padding:2px 6px; border-radius: 8px; color: var(--text); font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>QA Bug Reporter (Offline)</h1>
+      <div class="hint">Hotkeys: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> add quick note • <kbd>Ctrl</kbd>+<kbd>S</kbd> save • <kbd>Ctrl</kbd>+<kbd>E</kbd> export</div>
+    </div>
+    <div class="pill mono" id="nowPill">--</div>
+  </header>
+
+  <main>
+    <div class="grid">
+      <!-- LEFT: BUG REPORT FORM -->
+      <section class="card">
+        <h2>🐞 Bug Report</h2>
+
+        <div class="row">
+          <div>
+            <label>Bug ID</label>
+            <input id="bugId" placeholder="AUTO (e.g., BUG-20260217-001)" />
+          </div>
+          <div>
+            <label>Created</label>
+            <input id="createdAt" placeholder="AUTO" />
+          </div>
+        </div>
+
+        <label>Title</label>
+        <input id="title" placeholder="Thai subtitle overlaps speaker name in Cutscene 1" />
+
+        <div class="row">
+          <div>
+            <label>Platform / Environment</label>
+            <input id="env" placeholder="PC / PS5 / Build 1.02 / Language: Thai" />
+          </div>
+          <div>
+            <label>Frequency</label>
+            <select id="frequency">
+              <option>Once</option>
+              <option>Intermittent</option>
+              <option selected>100%</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Severity</label>
+            <select id="severity">
+              <option>Low</option>
+              <option selected>Medium</option>
+              <option>High</option>
+              <option>Critical</option>
+            </select>
+          </div>
+          <div>
+            <label>Area</label>
+            <input id="area" placeholder="Subtitles / UI / Cutscene / Audio / Menu" />
+          </div>
+        </div>
+
+        <label>Steps to Reproduce</label>
+        <div class="row">
+          <input id="stepInput" placeholder="Type a step and press Add (or Enter)..." />
+          <button class="btnSmall" id="addStepBtn" style="max-width:140px;">➕ Add Step</button>
+        </div>
+        <div class="stepsList" id="stepsList"></div>
+
+        <div class="row">
+          <div>
+            <label>Expected Result</label>
+            <textarea id="expected" placeholder="Subtitle should display fully and remain on screen until line finishes."></textarea>
+          </div>
+          <div>
+            <label>Actual Result</label>
+            <textarea id="actual" placeholder="Subtitle disappears early before character finishes speaking."></textarea>
+          </div>
+        </div>
+
+        <label>Notes (optional)</label>
+        <textarea id="notes" placeholder="Extra info: happens only in Thai, not English."></textarea>
+
+        <div class="btnRow">
+          <button class="btnPrimary" id="saveBtn">💾 Save (Local)</button>
+          <button id="loadBtn">📥 Load Last</button>
+          <button id="clearBtn" class="btnDanger">🧹 Clear Form</button>
+        </div>
+      </section>
+
+      <!-- RIGHT: QUICK NOTES + EXPORT -->
+      <aside class="card">
+        <h2>📝 Quick Notes (while game can’t pause)</h2>
+
+        <label>Quick note (timestamp auto)</label>
+        <div class="row">
+          <input id="quickNoteInput" placeholder="Scene 2 — Thai subtitle too fast" />
+          <button class="btnSmall" id="addNoteBtn" style="max-width:140px;">➕ Add Note</button>
+        </div>
+
+        <label>Notes log</label>
+        <textarea id="notesLog" class="mono" placeholder="(Your quick notes appear here...)"></textarea>
+
+        <div class="btnRow">
+          <button id="copyNotesBtn">📋 Copy Notes</button>
+          <button id="clearNotesBtn" class="btnDanger">🗑️ Clear Notes</button>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--line);margin:14px 0;" />
+
+        <h2>📦 Export</h2>
+        <label>Export format</label>
+        <select id="exportFormat">
+          <option value="md" selected>Markdown</option>
+          <option value="txt">Plain Text</option>
+          <option value="json">JSON</option>
+        </select>
+
+        <div class="btnRow">
+          <button id="previewBtn">👀 Preview</button>
+          <button class="btnPrimary" id="copyExportBtn">📋 Copy Export</button>
+          <button id="downloadBtn">⬇️ Download File</button>
+        </div>
+
+        <label>Preview</label>
+        <div class="output" id="previewOut">(Click Preview)</div>
+      </aside>
+    </div>
+  </main>
+
+  <div class="toast" id="toast">Saved!</div>
+
+  <script>
+    // ---------- helpers ----------
+    const $ = (id) => document.getElementById(id);
+
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function nowStamp(){
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    function dateKey(){
+      const d = new Date();
+      return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+    }
+
+    function toast(msg){
+      const t = $('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'), 1100);
+    }
+
+    // ---------- auto header time ----------
+    setInterval(()=> { $('nowPill').textContent = `Now: ${nowStamp()}`; }, 500);
+
+    // ---------- Bug ID ----------
+    function genBugId(){
+      const base = `BUG-${dateKey()}`;
+      const used = Number(localStorage.getItem('qa_bug_counter_' + dateKey()) || 0) + 1;
+      localStorage.setItem('qa_bug_counter_' + dateKey(), String(used));
+      return `${base}-${String(used).padStart(3,'0')}`;
+    }
+
+    // ---------- Steps ----------
+    const steps = [];
+    function renderSteps(){
+      const list = $('stepsList');
+      list.innerHTML = '';
+      steps.forEach((s, idx) => {
+        const row = document.createElement('div');
+        row.className = 'stepItem';
+
+        const input = document.createElement('input');
+        input.value = s;
+        input.placeholder = `Step ${idx+1}`;
+        input.addEventListener('input', (e)=> steps[idx] = e.target.value);
+
+        const btnWrap = document.createElement('div');
+        btnWrap.className = 'stepBtns';
+
+        const up = document.createElement('button');
+        up.className = 'btnSmall';
+        up.textContent = '⬆️';
+        up.title = 'Move up';
+        up.onclick = () => {
+          if(idx === 0) return;
+          [steps[idx-1], steps[idx]] = [steps[idx], steps[idx-1]];
+          renderSteps();
+        };
+
+        const down = document.createElement('button');
+        down.className = 'btnSmall';
+        down.textContent = '⬇️';
+        down.title = 'Move down';
+        down.onclick = () => {
+          if(idx === steps.length-1) return;
+          [steps[idx+1], steps[idx]] = [steps[idx], steps[idx+1]];
+          renderSteps();
+        };
+
+        const del = document.createElement('button');
+        del.className = 'btnSmall btnDanger';
+        del.textContent = '🗑️';
+        del.title = 'Delete';
+        del.onclick = () => {
+          steps.splice(idx, 1);
+          renderSteps();
+        };
+
+        btnWrap.append(up, down, del);
+        row.append(input, btnWrap);
+        list.append(row);
+      });
+    }
+
+    function addStep(text){
+      const t = (text ?? $('stepInput').value).trim();
+      if(!t) return;
+      steps.push(t);
+      $('stepInput').value = '';
+      renderSteps();
+    }
+
+    $('addStepBtn').addEventListener('click', () => addStep());
+    $('stepInput').addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        addStep();
+      }
+    });
+
+    // ---------- Quick notes ----------
+    function appendQuickNote(noteText){
+      const txt = (noteText ?? $('quickNoteInput').value).trim();
+      if(!txt) return;
+      const line = `[${nowStamp()}] ${txt}`;
+      const log = $('notesLog');
+      log.value = (log.value ? log.value + '\n' : '') + line;
+      $('quickNoteInput').value = '';
+      log.scrollTop = log.scrollHeight;
+      localStorage.setItem('qa_quick_notes', log.value);
+      toast('Note added');
+    }
+
+    $('addNoteBtn').addEventListener('click', ()=> appendQuickNote());
+    $('quickNoteInput').addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        appendQuickNote();
+      }
+    });
+
+    $('copyNotesBtn').addEventListener('click', async ()=>{
+      try{
+        await navigator.clipboard.writeText($('notesLog').value);
+        toast('Notes copied');
+      }catch{
+        toast('Copy blocked (browser)');
+      }
+    });
+
+    $('clearNotesBtn').addEventListener('click', ()=>{
+      $('notesLog').value = '';
+      localStorage.removeItem('qa_quick_notes');
+      toast('Notes cleared');
+    });
+
+    // ---------- Save / Load ----------
+    function collectForm(){
+      return {
+        bugId: $('bugId').value.trim(),
+        createdAt: $('createdAt').value.trim(),
+        title: $('title').value.trim(),
+        env: $('env').value.trim(),
+        frequency: $('frequency').value,
+        severity: $('severity').value,
+        area: $('area').value.trim(),
+        steps: [...steps],
+        expected: $('expected').value.trim(),
+        actual: $('actual').value.trim(),
+        notes: $('notes').value.trim(),
+        quickNotes: $('notesLog').value
+      };
+    }
+
+    function fillForm(data){
+      $('bugId').value = data.bugId || '';
+      $('createdAt').value = data.createdAt || '';
+      $('title').value = data.title || '';
+      $('env').value = data.env || '';
+      $('frequency').value = data.frequency || '100%';
+      $('severity').value = data.severity || 'Medium';
+      $('area').value = data.area || '';
+      steps.length = 0;
+      (data.steps || []).forEach(s => steps.push(s));
+      renderSteps();
+      $('expected').value = data.expected || '';
+      $('actual').value = data.actual || '';
+      $('notes').value = data.notes || '';
+      $('notesLog').value = data.quickNotes || '';
+    }
+
+    function saveLocal(){
+      const data = collectForm();
+      localStorage.setItem('qa_last_bug', JSON.stringify(data));
+      toast('Saved locally');
+    }
+
+    function loadLocal(){
+      const raw = localStorage.getItem('qa_last_bug');
+      if(!raw){ toast('Nothing saved yet'); return; }
+      fillForm(JSON.parse(raw));
+      toast('Loaded');
+    }
+
+    $('saveBtn').addEventListener('click', saveLocal);
+    $('loadBtn').addEventListener('click', loadLocal);
+
+    $('clearBtn').addEventListener('click', ()=>{
+      if(!confirm('Clear the bug form?')) return;
+      fillForm({
+        bugId: genBugId(),
+        createdAt: nowStamp(),
+        title:'', env:'', frequency:'100%', severity:'Medium', area:'',
+        steps: [], expected:'', actual:'', notes:'',
+        quickNotes: $('notesLog').value // keep quick notes
+      });
+      toast('Form cleared');
+    });
+
+    // ---------- Export ----------
+    function toMarkdown(d){
+      const stepsMd = (d.steps?.length ? d.steps.map((s,i)=>`${i+1}. ${s}`).join('\n') : '1. (none)');
+      return [
+        `## Bug Report`,
+        ``,
+        `**Bug ID:** ${d.bugId || '(none)'}`,
+        `**Created:** ${d.createdAt || '(none)'}`,
+        `**Title:** ${d.title || '(none)'}`,
+        `**Environment:** ${d.env || '(none)'}`,
+        `**Area:** ${d.area || '(none)'}`,
+        `**Frequency:** ${d.frequency || '(none)'}`,
+        `**Severity:** ${d.severity || '(none)'}`,
+        ``,
+        `### Steps to Reproduce`,
+        stepsMd,
+        ``,
+        `### Expected Result`,
+        d.expected || '(none)',
+        ``,
+        `### Actual Result`,
+        d.actual || '(none)',
+        ``,
+        `### Notes`,
+        d.notes || '(none)',
+        ``,
+        `---`,
+        `### Quick Notes Log`,
+        d.quickNotes ? `\n\`\`\`\n${d.quickNotes}\n\`\`\`` : '(none)'
+      ].join('\n');
+    }
+
+    function toText(d){
+      const stepsTxt = (d.steps?.length ? d.steps.map((s,i)=>`  ${i+1}) ${s}`).join('\n') : '  1) (none)');
+      return [
+        `BUG REPORT`,
+        `Bug ID: ${d.bugId || '(none)'}`,
+        `Created: ${d.createdAt || '(none)'}`,
+        `Title: ${d.title || '(none)'}`,
+        `Environment: ${d.env || '(none)'}`,
+        `Area: ${d.area || '(none)'}`,
+        `Frequency: ${d.frequency || '(none)'}`,
+        `Severity: ${d.severity || '(none)'}`,
+        ``,
+        `Steps to Reproduce:`,
+        stepsTxt,
+        ``,
+        `Expected Result:`,
+        d.expected || '(none)',
+        ``,
+        `Actual Result:`,
+        d.actual || '(none)',
+        ``,
+        `Notes:`,
+        d.notes || '(none)',
+        ``,
+        `Quick Notes Log:`,
+        d.quickNotes || '(none)'
+      ].join('\n');
+    }
+
+    function buildExport(){
+      const d = collectForm();
+      const fmt = $('exportFormat').value;
+      if(fmt === 'json') return JSON.stringify(d, null, 2);
+      if(fmt === 'txt') return toText(d);
+      return toMarkdown(d);
+    }
+
+    $('previewBtn').addEventListener('click', ()=>{
+      $('previewOut').textContent = buildExport();
+      toast('Preview updated');
+    });
+
+    $('copyExportBtn').addEventListener('click', async ()=>{
+      const text = buildExport();
+      try{
+        await navigator.clipboard.writeText(text);
+        toast('Export copied');
+      }catch{
+        toast('Copy blocked (browser)');
+      }
+    });
+
+    $('downloadBtn').addEventListener('click', ()=>{
+      const text = buildExport();
+      const fmt = $('exportFormat').value;
+      const d = collectForm();
+      const safeTitle = (d.title || 'bug-report').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+      const filename = `${d.bugId || 'BUG'}-${safeTitle || 'report'}.${fmt === 'md' ? 'md' : fmt}`;
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Downloaded');
+    });
+
+    // ---------- Hotkeys ----------
+    document.addEventListener('keydown', (e)=>{
+      const isCtrl = e.ctrlKey || e.metaKey;
+
+      // Ctrl+S => save
+      if(isCtrl && e.key.toLowerCase() === 's'){
+        e.preventDefault();
+        saveLocal();
+      }
+
+      // Ctrl+Enter => add quick note
+      if(isCtrl && e.key === 'Enter'){
+        e.preventDefault();
+        appendQuickNote();
+      }
+
+      // Ctrl+E => export preview
+      if(isCtrl && e.key.toLowerCase() === 'e'){
+        e.preventDefault();
+        $('previewOut').textContent = buildExport();
+        toast('Export preview');
+      }
+    });
+
+    // ---------- init ----------
+    (function init(){
+      // restore quick notes
+      const q = localStorage.getItem('qa_quick_notes');
+      if(q) $('notesLog').value = q;
+
+      // new bug defaults
+      $('bugId').value = genBugId();
+      $('createdAt').value = nowStamp();
+
+      // try load last bug silently (optional)
+      const raw = localStorage.getItem('qa_last_bug');
+      if(raw){
+        const data = JSON.parse(raw);
+        // keep new bugId if last report was old
+        data.bugId = $('bugId').value;
+        data.createdAt = $('createdAt').value;
+        fillForm(data);
+      }
+    })();
+  </script>
+</body>
+</html>
