@@ -245,6 +245,23 @@
     // ---------- helpers ----------
     const $ = (id) => document.getElementById(id);
 
+     function generateBugId(projectPrefix = "INT") {
+    const today = new Date();
+    const dateString =
+      today.getFullYear() +
+      String(today.getMonth() + 1).padStart(2, "0") +
+      String(today.getDate()).padStart(2, "0");
+
+    const key = "bugCounter_" + dateString;
+
+    let counter = localStorage.getItem(key);
+    counter = counter ? parseInt(counter) + 1 : 1;
+
+    localStorage.setItem(key, counter);
+
+    return `${projectPrefix}-${dateString}-${String(counter).padStart(3, "0")}`;
+  }
+
     function pad(n){ return String(n).padStart(2,'0'); }
     function nowStamp(){
       const d = new Date();
@@ -571,7 +588,7 @@
       if(q) $('notesLog').value = q;
 
       // new bug defaults
-      $('bugId').value = genBugId();
+      $('bugId').value = generateBugId();
       $('createdAt').value = nowStamp();
 
       // try load last bug silently (optional)
